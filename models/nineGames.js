@@ -19,11 +19,12 @@ NineGames.prototype.save = function(callback) {
     };
 	mongodb.save('nineGames', nineGames, function(err) {
 		if (err) {
-			console.log('mongodb.save() error');
+			//console.log('NineGames.prototype.save(): mongodb.save() error');
 			return callback(err);
 		}
-		callback(null, res);
+		callback(null);
 	});
 };
 
 module.exports = NineGames;
+

@@ -1,83 +1,110 @@
 var spider = require('./spider');
 var async = require('async');  
-var url = 'http://zx.aicai.com/news/newsmessage!newsSort.jhtml?shorturl=sfc';
-var term = 14083;
-var articleList=[];
-var odds=[];
-/*
-                    odd.save(function(err, odd) {
-                        if(err)
-                        {
-                            console.log('error code:'+res.statusCode);
-                            return callback(err);
-                        }
-                        console.log(i);
-                    });
-                    
-                    
-                    
+var URL = 'http://zx.aicai.com/news/newsmessage!newsSort.jhtml?shorturl=sfc';
+var TERM = 14085;
+var g_articleList=[];
+var g_odds=[];
+var g_nineGames=[];
+var mongodb = require('./models/db');
 
-                    */
+getArticleList = function() {
+	// get article list
+	spider.getArticleList(URL, TERM, function(err, list) {
+	    if(err) {
+	        console.log('spider.getArticleList() error');
+	    	callback(err);
+		}
+	    g_articleList = list;
+		console.log('Get the article list');
+	});	  	
+}
+
+storeArticle = function() {
+	//并发读取各文章
+	async.parallel([	
+	
+	    // get odds
+	    function(callback) {
+	        var i;
+	        for(i in g_articleList)
+	        {
+	            //\u671f\u8d54\u7387\u5206\u6790 = "赔率分析"      
+	            var tmp = g_articleList[i].name.match(/\u80DC\u8D1F\u5F69\d+\u671f\u8d54\u7387\u5206\u6790.*/);
+	            if(Array.isArray(tmp))
+	            {
+					console.log('Get odds');
+	                //console.log(list[i].url);
+	                spider.getArticleOdds(g_articleList[i].url, TERM, function(err, oddArray) {
+	                    if(err) {
+							console.log('spider.getArticleOdds() error');
+	                    	return callback(err);
+						}
+						//console.log(oddArray);
+	                    g_odds = oddArray;
+						callback(null, oddArray);
+	                });
+	            }
+	        }
+	    },
+
+		//得到任选九场推荐
+	    function(callback) {
+	        var i;
+	        for(i in g_articleList)
+	        {
+				//\u4efb\u9009\u4e5d\u573a "任选九场"
+	            var tmp = g_articleList[i].name.match(/\u80DC\u8D1F\u5F69\d+\u671f\u4efb\u9009\u4e5d\u573a.*/);
+				//console.log(tmp);
+	            if(Array.isArray(tmp))
+	            {
+					console.log('Get nine games');
+	                //console.log(list[i].url);
+	                spider.getArticleNineGames(g_articleList[i].url, TERM, function(err, nineGamesArray) {
+	                    if(err) {
+							console.log('spider.getArticleOdds() error');
+	                    	return callback(err);
+						}
+						//console.log(oddArray);
+	                    g_nineGames = nineGamesArray;
+						callback(null, nineGamesArray);
+	                });
+	            }
+	        }
+	    }
+
+
+
+	], function(err, array) {
+	    if(err) {
+	        return console.log(err);
+		}
+	
+		console.log("Save data");
+		for(i in array) {
+		    spider.saveObject(array[i], function(err){
+		        if(err) {
+					return;
+		        };
+		    }); 
+		}
+	});	
+}
+
+
 async.series([
-
-    function(callback) {
-        spider.getArticleList(url, term, function(err, list) {
-            if(err) {
-                //console.log('err');
-                throw err;
-            }
-            console.log(list);
-            articleList = list;
-            //console.log(articleList);
-            //return articleList;
-            callback(null, list)
-        });       
-    },
-    
-    function(callback) {
-        var i;
-        for(i in articleList)
-        {
-            //console.log(articleList[i].name);
-            //\u671F\u8DB3\u5F69\u5927\u52BF = 期足彩大势
-            //\u671f\u8d54\u7387\u5206\u6790 = 期赔率分析
-            
-            var tmp = articleList[i].name.match(/\u80DC\u8D1F\u5F69\d+\u671f\u8d54\u7387\u5206\u6790.*/);
-            if(Array.isArray(tmp))
-            {
-                //console.log(list[i].url);
-                spider.getArticleOdds(articleList[i].url, term, function(err, oddArray) {
-                    if(err) throw err;
-                    //console.log(oddArray);
-                    odds = oddArray;
-                    callback(null, oddArray);
-                });
-            }
-        }
-    },
-    
-    function(callback) {
-        spider.saveArticlueOdds(odds, function(err){
-            if(err) throw err;
-            callback(null);
-        
-        });
-        
-    }
-    
-    /*
-    funcion(callback) {
-        spider.saveArticleList()
-    }
-    */
-    
-
-], function(err, results) {
-    if(err)
-        console.log(err);
-    //process.exit(0);
+	function(callback) {
+		getArticleList();
+	},
+	function(callback) {
+		storeArticle();
+	}
+	
+], function(err, result) {
+	if(err) {
+		return console.log(err);
+	}
 });
-
-
+	
+  
 
     

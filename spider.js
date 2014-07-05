@@ -3,8 +3,10 @@ var cheerio = require('cheerio');
 var zlib = require('zlib');
 var debug = require('debug')('spider');
 
-Odd = require('./models/odd.js');
+var Odd = require('./models/odd.js');
+var NineGames = require('./models/nineGames.js');	
 //var articleList = [];
+
 
 var options_post = {
     headers: {
@@ -39,7 +41,7 @@ exports.getArticleList = function(url, term, callback) {
             zlib.unzip(body, function(err, str){
                 if(err) {
                     console.log('error code:'+res.statusCode);
-                    callback(err);
+                    return callback(err);
                 }    
                 
                 html = str.toString();
@@ -60,14 +62,33 @@ exports.getArticleList = function(url, term, callback) {
                     
                 });   
                 // 返回结果
-                callback(null, articleList);                   
+                return callback(null, articleList);                   
             });               
         }else {
             console.log('error code:'+res.statusCode);
-            callback(err);
+            return callback(err);
         }
     }); 
 };
+
+exports.saveObject = function(objectArray, callback) {
+    for (i in objectArray) {
+    //console.log(oddsArray[i]);
+        
+        objectArray[i].save(function(err, res) {
+            if(err) 
+            {
+                return callback(err);
+            }
+            //console.log(res);
+			return callback(null);
+        });
+        
+     }
+     
+    //Odd.closeDB();
+    return callback(null);
+}
 
 //得到赔率
 exports.getArticleOdds = function(url, term, callback) {
@@ -78,8 +99,8 @@ exports.getArticleOdds = function(url, term, callback) {
         if (!err && res.statusCode == 200) {
             zlib.unzip(body, function(err, str){
                 if(err) {
-                    console.log('error code:'+res.statusCode);
-                    callback(err);
+                    console.log('unzip error code:'+res.statusCode);
+                    return callback(err);
                 }
                 html = str.toString();
                 var $ = cheerio.load(html);
@@ -106,32 +127,61 @@ exports.getArticleOdds = function(url, term, callback) {
                     oddsArray.push(odd);
                 }  
                 
-                callback(err, oddsArray);
+                return callback(null, oddsArray);
             });           
         }else {
-            console.log('error code:'+res.statusCode);
-            callback(err);
+            console.log('request error code:'+res.statusCode);
+            return callback(err);
         }
     });     
 }
 
-exports.saveArticlueOdds = function(oddsArray, callback) {
-    for (i in oddsArray) {
-    //console.log(oddsArray[i]);
-        
-        oddsArray[i].save(function(err, res) {
-            if(err) 
-            {
-                console.log('err');
-                throw err;
-            }
-            console.log(res);
-            //console.log('save:\n');
-            //console.log(oddsArray[i]);
-        });
-        
-     }
-     
-    //Odd.closeDB();
-    callback(null);
+//得到任选九场推荐
+exports.getArticleNineGames = function(url, term, callback) {
+    options_get.url = 'http://'+options_get.headers['Host']+url;
+    //console.log(options_get);
+    request.get(options_get, function (err, res, body) {
+        if (!err && res.statusCode == 200) {
+            zlib.unzip(body, function(err, str){
+                if(err) {
+                    console.log('unzip error code:'+res.statusCode);
+                    return callback(err);
+                }
+                html = str.toString();
+                var $ = cheerio.load(html);
+				//console.log(html);
+                
+                var i,count=0;
+                var nineGamesArray = [];
+                var item = {};
+				
+                //一行6栏 14行
+                var filter = 'table tr td';
+                for(i=6; i<118; i+=8) {  
+                    var id = $(filter).eq(i).text();
+                    item.term_id = term+'-'+id;
+                    item.team = $(filter).eq(i+1).text()+' '+$(filter).eq(i+2).text()+' '+$(filter).eq(i+3).text();                    
+                    item.select = $(filter).eq(i+4).text();
+					item.detail = $(filter).eq(i+5).text();
+                    item.prefer = $(filter).eq(i+6).text()+' '+$(filter).eq(i+7).text();
+                    
+					//console.log(item);
+					
+                    var nineGames = new NineGames ({
+                        term_id: item.term_id,
+                        team: item.team,
+						select: item.select,
+                        detail: item.detail,
+                        prefer: item.prefer                        
+                    });
+                    nineGamesArray.push(nineGames);
+				}  
+                
+                return callback(null, nineGamesArray);
+            });           
+        }else {
+            console.log('request error code:'+res.statusCode);
+            return callback(err);
+        }
+    });   	
 }
