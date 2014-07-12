@@ -8,9 +8,9 @@ db = new Db(settings.db, new Server(settings.host, Connection.DEFAULT_PORT), {sa
 db.open(function(err,db) {
     if(err)throw err;
     console.log("mongodb connected");
+	
     return;
 });
-
 
 db.save = function(collection, object, callback) {
     	
@@ -28,11 +28,10 @@ db.save = function(collection, object, callback) {
 						console.log(err);
                     return callback(err);//错误，返回 err 信息
                 }
+				dbQueryCounter ++;
                 callback(null, object);//成功！err 为 null，并返回存储后的用户文档
             });
-        });
-		
-		
+        });	
     });
 };	
 module.exports = db;

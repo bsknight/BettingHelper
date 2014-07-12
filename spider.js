@@ -9,7 +9,6 @@ var BetStrategy = require('./models/betStrategy.js');
 var Schedule = require('./models/schedule.js');	
 //var articleList = [];
 
-
 var options_post = {
     headers: {
         'Host': 'zx.aicai.com',
