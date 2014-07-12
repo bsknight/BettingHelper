@@ -28,7 +28,6 @@ db.save = function(collection, object, callback) {
 						console.log(err);
                     return callback(err);//错误，返回 err 信息
                 }
-				dbQueryCounter ++;
                 callback(null, object);//成功！err 为 null，并返回存储后的用户文档
             });
         });	
