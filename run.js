@@ -3,8 +3,6 @@ var async = require('async');
 var URL = 'http://zx.aicai.com/news/newsmessage!newsSort.jhtml?shorturl=sfc';
 var TERM = 14085;
 var g_articleList=[];
-var g_odds=[];
-var g_nineGames=[];
 var mongodb = require('./models/db');
 
 getInfomation = function(callback) {
@@ -37,7 +35,7 @@ getInfomation = function(callback) {
 		                    	return callback(err);
 							}
 							//console.log(oddArray);
-		                    g_odds = oddArray;
+		                    //g_odds = oddArray;
 							callback(null, oddArray);
 		                });
 		            }
@@ -62,12 +60,59 @@ getInfomation = function(callback) {
 		                    	return callback(err);
 							}
 							//console.log(oddArray);
-		                    g_nineGames = nineGamesArray;
+		                    //g_nineGames = nineGamesArray;
 							callback(null, nineGamesArray);
 		                });
 		            }
 		        }
-		    }
+		    },
+			
+			//得到投注策略
+		    function(callback) {
+		        var i;
+		        for(i in g_articleList)
+		        {
+		            var tmp = g_articleList[i].name.match(/\u80DC\u8D1F\u5F69\d+\u671f\u6295\u6ce8\u7b56\u7565.*/);
+					//console.log(tmp);
+		            if(Array.isArray(tmp))
+		            {
+						console.log('Get bet strategy');
+		                //console.log(list[i].url);
+		                spider.getArticBetStrategy(g_articleList[i].url, TERM, function(err, betArray) {
+		                    if(err) {
+								console.log('spider.getArticBetStrategy() error');
+		                    	return callback(err);
+							}
+							//console.log(oddArray);
+							callback(null, betArray);
+		                });
+		            }
+		        }
+		    },
+			
+			//得到赛程解读
+		    function(callback) {
+		        var i;
+		        for(i in g_articleList)
+		        {
+		            var tmp = g_articleList[i].name.match(/\u80DC\u8D1F\u5F69\d+\u671f\u8d5b\u7a0b\u89e3\u8bfb.*/);
+					//console.log(tmp);
+		            if(Array.isArray(tmp))
+		            {
+						console.log('Get schedule');
+		                //console.log(list[i].url);
+		                spider.getArticSchedule(g_articleList[i].url, TERM, function(err, scheduleArray) {
+		                    if(err) {
+								console.log('spider.getArticSchedule() error');
+		                    	return callback(err);
+							}
+							//console.log(oddArray);
+							callback(null, scheduleArray);
+		                });
+		            }
+		        }
+		    }						
+			
 
 
 

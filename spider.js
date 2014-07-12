@@ -5,6 +5,8 @@ var debug = require('debug')('spider');
 
 var Odd = require('./models/odd.js');
 var NineGames = require('./models/nineGames.js');	
+var BetStrategy = require('./models/betStrategy.js');	
+var Schedule = require('./models/schedule.js');	
 //var articleList = [];
 
 
@@ -167,6 +169,7 @@ exports.getArticleNineGames = function(url, term, callback) {
                     
 					//console.log(item);
 					
+					
                     var nineGames = new NineGames ({
                         term_id: item.term_id,
                         team: item.team,
@@ -175,6 +178,7 @@ exports.getArticleNineGames = function(url, term, callback) {
                         prefer: item.prefer                        
                     });
                     nineGamesArray.push(nineGames);
+					
 				}  
                 
                 return callback(null, nineGamesArray);
@@ -185,3 +189,107 @@ exports.getArticleNineGames = function(url, term, callback) {
         }
     });   	
 }
+
+//得到投注策略
+exports.getArticBetStrategy = function(url, term, callback) {
+    options_get.url = 'http://'+options_get.headers['Host']+url;
+    //console.log(options_get);
+    request.get(options_get, function (err, res, body) {
+        if (!err && res.statusCode == 200) {
+            zlib.unzip(body, function(err, str){
+                if(err) {
+                    console.log('unzip error code:'+res.statusCode);
+                    return callback(err);
+                }
+                html = str.toString();
+                var $ = cheerio.load(html);
+				//console.log(html);
+                
+                var i,count=0;
+                var betArray = [];
+                var item = {};
+				
+                //一行6栏 14行
+                var filter = 'table tr td';
+                for(i=5; i<75; i+=5) {  
+                    var id = $(filter).eq(i).text();
+                    item.term_id = term+'-'+id;
+                    item.team = $(filter).eq(i+1).text();                    
+                    item.type = $(filter).eq(i+2).text();
+					item.detail = $(filter).eq(i+3).text();
+                    item.prefer = $(filter).eq(i+4).text();
+                    
+					//console.log(item);
+					
+                    var bet = new BetStrategy ({
+                        term_id: item.term_id,
+                        team: item.team,
+						type: item.type,
+                        detail: item.detail,
+                        prefer: item.prefer                        
+                    });
+                    betArray.push(bet);
+					
+				}  
+                
+                return callback(null, betArray);
+            });           
+        }else {
+            console.log('request error code:'+res.statusCode);
+            return callback(err);
+        }
+    });   	
+}
+
+//得到投注策略
+exports.getArticSchedule = function(url, term, callback) {
+    options_get.url = 'http://'+options_get.headers['Host']+url;
+    //console.log(options_get);
+    request.get(options_get, function (err, res, body) {
+        if (!err && res.statusCode == 200) {
+            zlib.unzip(body, function(err, str){
+                if(err) {
+                    console.log('unzip error code:'+res.statusCode);
+                    return callback(err);
+                }
+                html = str.toString();
+                var $ = cheerio.load(html);
+				//console.log(html);
+                
+                var i,count=0;
+                var scheduleArray = [];
+                var item = {};
+				
+                //一行6栏 14行
+                var filter = 'table tr td';
+                for(i=5; i<75; i+=5) {  
+                    var id = $(filter).eq(i).text();
+                    item.term_id = term+'-'+id;
+                    item.team = $(filter).eq(i+1).text();                    
+                    item.recent = $(filter).eq(i+2).text();
+					item.schedule = $(filter).eq(i+3).text();
+                    item.prefer = $(filter).eq(i+4).text();
+                    
+					//console.log(item);
+					
+					
+                    var schedule = new Schedule ({
+                        term_id: item.term_id,
+                        team: item.team,
+						recent: item.recent,
+                        schedule: item.schedule,
+                        prefer: item.prefer                        
+                    });
+                    scheduleArray.push(schedule);
+					
+				}  
+                
+                return callback(null, scheduleArray);
+            });           
+        }else {
+            console.log('request error code:'+res.statusCode);
+            return callback(err);
+        }
+    });   	
+}
+
