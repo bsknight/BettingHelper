@@ -1,6 +1,7 @@
 module.exports = {
     cookieSecret: 'helper', 
     db: 'betting',
-    host: 'localhost'
+    host: 'localhost',
+	term: 14086
 };
 

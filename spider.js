@@ -114,13 +114,17 @@ exports.getArticleOdds = function(url, term, callback) {
                 var filter = 'table tr td';
                 for(i=1; i<=112; i+=8) {  
                     var id = $(filter).eq(i+5).text();
+					item.term = parseInt(term);
+					item.id = parseInt(id);					
                     item.term_id = term+'-'+id;
                     item.team = $(filter).eq(i+6).text()+' '+$(filter).eq(i+7).text()+' '+$(filter).eq(i+8).text();                    
                     item.detail = $(filter).eq(i+9).text();
                     item.prefer = $(filter).eq(i+10).text()+' '+$(filter).eq(i+11).text()+' '+$(filter).eq(i+12).text();
                     
                     var odd = new Odd ({
-                        term_id: item.term_id,
+                        term_id: item.term_id,						
+						term: item.term,
+						id: item.id,						
                         team: item.team,
                         detail: item.detail,
                         prefer: item.prefer                        
@@ -160,6 +164,8 @@ exports.getArticleNineGames = function(url, term, callback) {
                 var filter = 'table tr td';
                 for(i=6; i<118; i+=8) {  
                     var id = $(filter).eq(i).text();
+					item.term = parseInt(term);
+					item.id = parseInt(id);
                     item.term_id = term+'-'+id;
                     item.team = $(filter).eq(i+1).text()+' '+$(filter).eq(i+2).text()+' '+$(filter).eq(i+3).text();                    
                     item.select = $(filter).eq(i+4).text();
@@ -170,7 +176,9 @@ exports.getArticleNineGames = function(url, term, callback) {
 					
 					
                     var nineGames = new NineGames ({
-                        term_id: item.term_id,
+                        term_id: item.term_id,						
+						term: item.term,
+						id: item.id,
                         team: item.team,
 						select: item.select,
                         detail: item.detail,
@@ -212,6 +220,8 @@ exports.getArticBetStrategy = function(url, term, callback) {
                 var filter = 'table tr td';
                 for(i=5; i<75; i+=5) {  
                     var id = $(filter).eq(i).text();
+					item.term = parseInt(term);
+					item.id = parseInt(id);					
                     item.term_id = term+'-'+id;
                     item.team = $(filter).eq(i+1).text();                    
                     item.type = $(filter).eq(i+2).text();
@@ -221,7 +231,9 @@ exports.getArticBetStrategy = function(url, term, callback) {
 					//console.log(item);
 					
                     var bet = new BetStrategy ({
-                        term_id: item.term_id,
+                        term_id: item.term_id,						
+						term: item.term,
+						id: item.id,						
                         team: item.team,
 						type: item.type,
                         detail: item.detail,
@@ -263,6 +275,8 @@ exports.getArticSchedule = function(url, term, callback) {
                 var filter = 'table tr td';
                 for(i=5; i<75; i+=5) {  
                     var id = $(filter).eq(i).text();
+					item.term = parseInt(term);
+					item.id = parseInt(id);						
                     item.term_id = term+'-'+id;
                     item.team = $(filter).eq(i+1).text();                    
                     item.recent = $(filter).eq(i+2).text();
@@ -273,7 +287,9 @@ exports.getArticSchedule = function(url, term, callback) {
 					
 					
                     var schedule = new Schedule ({
-                        term_id: item.term_id,
+						term_id: item.term_id,
+						term: item.term,
+						id: item.id,						
                         team: item.team,
 						recent: item.recent,
                         schedule: item.schedule,

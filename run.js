@@ -1,7 +1,8 @@
 var spider = require('./spider');
 var async = require('async');  
+var settings = require('./settings');
 var URL = 'http://zx.aicai.com/news/newsmessage!newsSort.jhtml?shorturl=sfc';
-var TERM = 14085;
+var TERM = settings.term;
 var g_articleList=[];
 var mongodb = require('./models/db');
 
@@ -13,6 +14,7 @@ getInfomation = function(callback) {
 	    	return callback(err);
 		}
 	    g_articleList = list;
+		console.log(list);
 		console.log('Get the article list');
 		
 		//并发读取各文章

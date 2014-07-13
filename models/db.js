@@ -8,12 +8,10 @@ db = new Db(settings.db, new Server(settings.host, Connection.DEFAULT_PORT), {sa
 db.open(function(err,db) {
     if(err)throw err;
     console.log("mongodb connected");
-	
     return;
 });
 
 db.save = function(collection, object, callback) {
-    	
     db.collection(collection, function (err, collection) {
         if (err) {
 			console.log('mongodb.collecton() error');

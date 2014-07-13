@@ -1,7 +1,9 @@
 var mongodb = require('./db');
 
 function Odd(odd) {
-    this.term_id = odd.term_id
+	this.term_id = odd.term_id;
+	this.term = odd.term;
+	this.id = odd.id;
     this.team = odd.team;
     this.detail = odd.detail;
     this.prefer = odd.prefer;
@@ -11,7 +13,9 @@ module.exports = Odd;
 
 Odd.prototype.save = function(callback) {
     var odd = {
-        term_id: this.term_id,
+		term_id: this.term_id,
+		term: this.term,
+		id: this.id,
         team: this.team,
         detail: this.detail,
         prefer: this.prefer
