@@ -30,5 +30,27 @@ BetStrategy.prototype.save = function(callback) {
 	});
 };
 
+BetStrategy.get = function(term, id, callback) {
+	db.collection('betStrategy', function (err, collection) {
+		if (err) {
+			return callback(err);
+		}
+
+		var query = {};
+		query.term = term;
+		query.id = parseInt(id);
+		
+
+		collection.findOne(query, function (err, object) {
+			if(err) {
+				console.log('collection.findOne() err');
+				callback(err);
+			}
+			return callback(null, object);
+		});
+		
+	});
+};
+
 module.exports = BetStrategy;
 

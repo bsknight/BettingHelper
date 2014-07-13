@@ -14,28 +14,40 @@ getArticle = function(term, id, callback) {
 
 	async.series([	
 		function(callback) {
-			NineGames.get(TERM, 1, function(err,nineGames) {
+			NineGames.get(TERM, id, function(err,nineGames) {
 				if(err) {
 					console.log('NineGames.get() error');
 					return callback(err);
 				}
-				console.log('get nine');
+				console.log('get nineGames');
 				nineGames.name = '任选九场';
 				callback(err, nineGames);
 			});				
 		},
 		
 		function(callback) {
-			NineGames.get(TERM, 1, function(err,nineGames) {
+			BetStrategy.get(TERM, id, function(err,betStrategy) {
 				if(err) {
-					console.log('NineGames.get() error');
+					console.log('BetStrategy.get() error');
 					return callback(err);
 				}
-				console.log('get nine');
-				nineGames.name = '任选九场';
-				callback(err, nineGames);
+				console.log('get betStrategy');
+				betStrategy.name = '投注策略';
+				callback(err, betStrategy);
 			});				
-		}		
+		},
+
+		function(callback) {
+			Schedule.get(TERM, id, function(err,schedule) {
+				if(err) {
+					console.log('Schedule.get() error');
+					return callback(err);
+				}
+				console.log('get schedule');
+				schedule.name = '赛程前瞻';
+				callback(err, schedule);
+			});				
+		}	
 		
 	], function(err, objectArray) {
 		if(err) {
@@ -47,16 +59,14 @@ getArticle = function(term, id, callback) {
 	
 };
 
-router.get('/', function(req, res) {
-	//console.log(TERM);
-	getArticle(TERM, 1, function(err, array) {
+
+router.get('/:i', function(req, res) {
+	var id = req.param('i');
+	getArticle(TERM, id, function(err, array) {
 		if(err) return console.log(err);
-		
-		console.log(array);
+		//console.log(array);
 		res.render('index', { articleArray: array });
 	});
-
-
 });
 
 module.exports = router;

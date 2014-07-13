@@ -17,7 +17,7 @@ getInfomation = function(callback) {
 		console.log(list);
 		console.log('Get the article list');
 		
-		//²¢·¢¶ÁÈ¡¸÷ÎÄÕÂ
+		//å¹¶å‘è¯»å–å„æ–‡ç« 
 		async.parallel([	
 	
 		    // get odds
@@ -25,7 +25,7 @@ getInfomation = function(callback) {
 		        var i;
 		        for(i in g_articleList)
 		        {
-		            //\u671f\u8d54\u7387\u5206\u6790 = "ÅâÂÊ·ÖÎö"      
+		            //\u671f\u8d54\u7387\u5206\u6790 = "èµ”ç‡åˆ†æ"      
 		            var tmp = g_articleList[i].name.match(/\u80DC\u8D1F\u5F69\d+\u671f\u8d54\u7387\u5206\u6790.*/);
 		            if(Array.isArray(tmp))
 		            {
@@ -44,12 +44,12 @@ getInfomation = function(callback) {
 		        }
 		    },
 
-			//µÃµ½ÈÎÑ¡¾Å³¡ÍÆ¼ö
+			//å¾—åˆ°ä»»é€‰ä¹åœºæ¨è
 		    function(callback) {
 		        var i;
 		        for(i in g_articleList)
 		        {
-					//\u4efb\u9009\u4e5d\u573a "ÈÎÑ¡¾Å³¡"
+					//\u4efb\u9009\u4e5d\u573a "ä»»é€‰ä¹åœº"
 		            var tmp = g_articleList[i].name.match(/\u80DC\u8D1F\u5F69\d+\u671f\u4efb\u9009\u4e5d\u573a.*/);
 					//console.log(tmp);
 		            if(Array.isArray(tmp))
@@ -69,7 +69,7 @@ getInfomation = function(callback) {
 		        }
 		    },
 			
-			//µÃµ½Í¶×¢²ßÂÔ
+			//å¾—åˆ°æŠ•æ³¨ç­–ç•¥
 		    function(callback) {
 		        var i;
 		        for(i in g_articleList)
@@ -92,7 +92,7 @@ getInfomation = function(callback) {
 		        }
 		    },
 			
-			//µÃµ½Èü³Ì½â¶Á
+			//å¾—åˆ°èµ›ç¨‹è§£è¯»
 		    function(callback) {
 		        var i;
 		        for(i in g_articleList)
@@ -113,11 +113,8 @@ getInfomation = function(callback) {
 		                });
 		            }
 		        }
-		    }						
-			
-
-
-
+		    }	
+		    					
 		], function(err, array) {
 		    if(err) {
 		        return console.log(err);
