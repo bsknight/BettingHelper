@@ -1,7 +1,9 @@
 var mongodb = require('./db');
 
 function Schedule(schedule) {
-    this.term_id = schedule.term_id
+	this.term_id = schedule.term_id;
+	this.term = schedule.term;	
+	this.id = schedule.id;
     this.team = schedule.team;
 	this.recent = schedule.recent;
     this.schedule = schedule.schedule;
@@ -11,7 +13,9 @@ function Schedule(schedule) {
 
 Schedule.prototype.save = function(callback) {
     var schedule = {
-        term_id: this.term_id,
+		term_id: this.term_id,
+		term: this.term,
+		id: this.id,
         team: this.team,
 		recent: this.recent,
         schedule: this.schedule,
