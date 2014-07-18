@@ -10,45 +10,42 @@ var async = require('async');
 var TERM = settings.term;
 
 /* GET home page. */
-getArticle = function(term, id, callback) {
+getArticle = function(term, callback) {
 
 	async.series([	
 		function(callback) {
-			NineGames.get(TERM, id, function(err,nineGames) {
+			NineGames.getByTerm(TERM, function(err,nineGames) {
 				if(err) {
-					console.log('NineGames.get() error');
+					console.log('NineGames.getByTerm() error');
 					return callback(err);
 				}
 				console.log('get nineGames');
-				nineGames.name = '任选九场';
 				callback(err, nineGames);
-			});				
-		},
-		
-		function(callback) {
-			BetStrategy.get(TERM, id, function(err,betStrategy) {
-				if(err) {
-					console.log('BetStrategy.get() error');
-					return callback(err);
-				}
-				console.log('get betStrategy');
-				betStrategy.name = '投注策略';
-				callback(err, betStrategy);
 			});				
 		},
 
 		function(callback) {
-			Schedule.get(TERM, id, function(err,schedule) {
+			BetStrategy.getByTerm(TERM, function(err,betStrategy) {
 				if(err) {
-					console.log('Schedule.get() error');
+					console.log('BetStrategy.getByTerm() error');
+					return callback(err);
+				}
+				console.log('get betStrategy');
+				callback(err, betStrategy);
+			});				
+		},
+		
+		function(callback) {
+			Schedule.getByTerm(TERM, function(err,schedule) {
+				if(err) {
+					console.log('Schedule.getByTerm() error');
 					return callback(err);
 				}
 				console.log('get schedule');
-				schedule.name = '赛程前瞻';
 				callback(err, schedule);
 			});				
 		}	
-		
+		 
 	], function(err, objectArray) {
 		if(err) {
 			console.log(err);
@@ -59,10 +56,10 @@ getArticle = function(term, id, callback) {
 	
 };
 
-
-router.get('/:i', function(req, res) {
-	var id = req.param('i');
-	getArticle(TERM, id, function(err, array) {
+ 
+router.get('/', function(req, res) {
+	//var id = req.param('i');
+	getArticle(TERM, function(err, array) {
 		if(err) return console.log(err);
 		//console.log(array);
 		res.render('index', { articleArray: array });

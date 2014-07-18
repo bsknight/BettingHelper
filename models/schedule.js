@@ -30,7 +30,7 @@ Schedule.prototype.save = function(callback) {
 	});
 };
 
-Schedule.get = function(term, id, callback) {
+Schedule.getById = function(term, id, callback) {
 	db.collection('schedule', function (err, collection) {
 		if (err) {
 			return callback(err);
@@ -47,6 +47,27 @@ Schedule.get = function(term, id, callback) {
 				callback(err);
 			}
 			return callback(null, object);
+		});
+		
+	});
+};
+
+Schedule.getByTerm = function(term, callback) {
+	db.collection('schedule', function (err, collection) {
+		if (err) {
+			return callback(err);
+		}
+
+		var query = {};
+		query.term = term;
+		
+		collection.find(query).sort({id:1}).toArray(function (err, objectArray) {
+			if(err) {
+				console.log('collection.findByTerm() err');
+				callback(err);
+			}
+			//console.log(objectArray);
+			return callback(null, objectArray);
 		});
 		
 	});

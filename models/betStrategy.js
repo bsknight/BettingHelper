@@ -30,7 +30,7 @@ BetStrategy.prototype.save = function(callback) {
 	});
 };
 
-BetStrategy.get = function(term, id, callback) {
+BetStrategy.getById = function(term, id, callback) {
 	db.collection('betStrategy', function (err, collection) {
 		if (err) {
 			return callback(err);
@@ -47,6 +47,27 @@ BetStrategy.get = function(term, id, callback) {
 				callback(err);
 			}
 			return callback(null, object);
+		});
+		
+	});
+};
+
+BetStrategy.getByTerm = function(term, callback) {
+	db.collection('betStrategy', function (err, collection) {
+		if (err) {
+			return callback(err);
+		}
+
+		var query = {};
+		query.term = term;
+		
+		collection.find(query).sort({id:1}).toArray(function (err, objectArray) {
+			if(err) {
+				console.log('collection.findByTerm() err');
+				callback(err);
+			}
+			//console.log(objectArray);
+			return callback(null, objectArray);
 		});
 		
 	});

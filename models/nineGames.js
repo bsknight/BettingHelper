@@ -30,22 +30,43 @@ NineGames.prototype.save = function(callback) {
 	});
 };
 
-NineGames.get = function(term, id, callback) {
+NineGames.getById = function(term, id, callback) {
 	db.collection('nineGames', function (err, collection) {
 		if (err) {
 			return callback(err);
 		}
+
 		var query = {};
 		query.term = term;
 		query.id = parseInt(id);
 		
-
 		collection.findOne(query, function (err, object) {
 			if(err) {
 				console.log('collection.findOne() err');
 				callback(err);
 			}
 			return callback(null, object);
+		});
+		
+	});
+};
+
+NineGames.getByTerm = function(term, callback) {
+	db.collection('nineGames', function (err, collection) {
+		if (err) {
+			return callback(err);
+		}
+
+		var query = {};
+		query.term = term;
+		
+		collection.find(query).sort({id:1}).toArray(function (err, objectArray) {
+			if(err) {
+				console.log('collection.find() err');
+				callback(err);
+			}
+			//console.log(objectArray);
+			return callback(null, objectArray);
 		});
 		
 	});
