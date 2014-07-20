@@ -2,8 +2,10 @@ var request = require('request');
 var cheerio = require('cheerio');
 var zlib = require('zlib');
 var debug = require('debug')('spider');
-
+var iconv = require('iconv-lite');
+var Iconv = require('iconv').Iconv;
 var Odd = require('./models/odd.js');
+var OkOdd = require('./models/OkOdd.js')
 var NineGames = require('./models/nineGames.js');	
 var BetStrategy = require('./models/betStrategy.js');	
 var Schedule = require('./models/schedule.js');	
@@ -26,6 +28,17 @@ var options_post = {
 var options_get = {
     headers: {
         'Host': 'zx.aicai.com',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.114 Safari/537.36',
+        'Accept-Encoding': 'gzip',
+        'Accept-Language': 'zh-CN,zh;q=0.8',
+    },
+    encoding: null
+};
+
+var options_get_okooo = {
+    headers: {
+        'Host': 'www.okooo.com',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.114 Safari/537.36',
         'Accept-Encoding': 'gzip',
@@ -72,7 +85,7 @@ exports.getArticleList = function(url, term, callback) {
     }); 
 };
 
-exports.saveObject = function(objectArray, callback) {
+exports.saveObjectUniqueTermId = function(objectArray, callback) {
     for (i in objectArray) {
     //console.log(oddsArray[i]);
         
@@ -308,3 +321,157 @@ exports.getArticSchedule = function(url, term, callback) {
     });   	
 }
 
+
+//得到澳客赔率链接
+exports.getOkooo = function(url, term, callback) {
+    options_get_okooo.url = url;
+    //console.log(options_get_okooo);
+    request.get(options_get_okooo, function (err, res, body) {
+        if (!err && res.statusCode == 200) {
+            zlib.unzip(body, function(err, str){
+                if(err) {
+                    console.log('unzip error code:'+res.statusCode);
+                    return callback(err);
+                }
+                //页面字符集为gb2312 需要转换
+                var gb2312_to_utf8_iconv = new Iconv('GB2312', 'UTF-8');
+                var buffer = gb2312_to_utf8_iconv.convert(str);
+                html = buffer.toString();
+                var $ = cheerio.load(html);
+
+                var filter = 'table tbody tr td a[class="jsOupei"]';
+
+                var urlArray = [];
+                $(filter).each(function () { 
+                    var $me = $(this);
+                    //console.log($me.attr('href'));
+                    urlArray.push($me.attr('href'));
+                })
+
+                return callback(null, urlArray);
+                //return callback(null, scheduleArray);
+            });           
+        }else {
+            console.log('request error code:'+err);
+            return callback(err);
+        }
+    });     
+}
+
+//进入澳客赔率页面读取赔率
+exports.getOkOdd = function(url, TERM, ID, callback) {
+    options_get_okooo.url = 'http://'+options_get_okooo.headers['Host']+url;
+    //console.log(options_get_okooo);
+    request.get(options_get_okooo, function (err, res, body) {
+        if (!err && res.statusCode == 200) {
+            zlib.unzip(body, function(err, str){
+                if(err) {
+                    console.log('unzip error code:'+res.statusCode);
+                    return callback(err);
+                }
+
+                var gb2312_to_utf8_iconv = new Iconv('GB2312', 'UTF-8');
+                var buffer = gb2312_to_utf8_iconv.convert(str);
+                html = buffer.toString();
+                //console.log(html);
+                var $ = cheerio.load(html);
+                
+                var filter = 'tr td span[class="company_name"]';
+                var initWinFilter = 'tr td[class="borderLeft feedbackObj csObj"] span';
+                var initDrawFilter = 'tr td[class="feedbackObj csObj"] span';
+                var initLoseFilter = 'tr td[class="feedbackObj bright csObj"] span';
+                var nowOddFilter = 'tr td a span';
+                var oddArray = [];
+                var initLine = 0;   //记录初始赔率行数 方便读取对应的赔率
+                var nowLine = 0;    //记录现在赔率行数
+                $(filter).each(function () {
+
+                    var $me = $(this);
+
+                    var item = new OkOdd({
+                        term: parseInt(TERM),
+                        id: parseInt(ID),
+                        company: $me.text().trim(),
+                        term_id: TERM.toString()+'-'+ID.toString()+'-'+$me.text().trim(),                
+                        
+                        //初始赔率
+                        initWin: $(initWinFilter).eq(nowLine+0).text(),
+                        initDraw: $(initDrawFilter).eq(nowLine+0).text(),
+                        initLose: $(initLoseFilter).eq(nowLine+0).text(),
+                        //现在赔率
+                        nowWin: $(nowOddFilter).eq(initLine+0).text(),
+                        nowDraw: $(nowOddFilter).eq(initLine+1).text(),
+                        nowLose: $(nowOddFilter).eq(initLine+2).text()                       
+                    });   
+
+                    
+                    nowLine += 1;
+                    initLine += 3; 
+                    //
+                    //99家平均
+                    var s = item.company.match(/\9\9\u5bb6\u5e73\u5747/); 
+                    if (Array.isArray(s)) {
+                        //console.log(s);
+                        oddArray.push(item)
+                        return;
+                    }
+                    //威廉.希尔
+                    s = item.company.match(/\u5a01\u5ec9\.\u5e0c\u5c14/); 
+                    if (Array.isArray(s)) {
+                        //console.log(s);
+                        oddArray.push(item)
+                        return;
+                    }            
+                    //立博
+                    s = item.company.match(/\u7acb\u535a/); 
+                    if (Array.isArray(s)) {
+                        //console.log(s);
+                        oddArray.push(item)
+                        return;
+                    }
+                    //博天堂
+                    s = item.company.match(/\u535a\u5929\u5802/); 
+                    if (Array.isArray(s)) {
+                        //console.log(s);
+                        oddArray.push(item)
+                        return;
+                    } 
+                    //澳门彩票
+                    s = item.company.match(/\u6fb3\u95e8\u5f69\u7968/); 
+                    if (Array.isArray(s)) {
+                        //console.log(s);
+                        oddArray.push(item)
+                        return;
+                    }                 
+
+                    //console.log(item);                        
+                });
+                //console.log(oddArray);
+                
+                return callback(null, oddArray);
+            });           
+        }else {
+            console.log('request error code:'+res);
+            return callback(err);
+        }
+    });     
+}
+
+exports.updateOdd = function(objectArray, callback) {
+    for (i in objectArray) {
+    //console.log(oddsArray[i]);
+        
+        objectArray[i].save(function(err, res) {
+            if(err) 
+            {
+                return callback(err);
+            }
+            //console.log(res);
+            return callback(null);
+        });
+        
+     }
+     
+    //Odd.closeDB();
+    return callback(null);
+}

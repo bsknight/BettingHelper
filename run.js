@@ -2,6 +2,7 @@ var spider = require('./spider');
 var async = require('async');  
 var settings = require('./settings');
 var URL = 'http://zx.aicai.com/news/newsmessage!newsSort.jhtml?shorturl=sfc';
+var OkoooUrl = 'http://www.okooo.com/zucai/ren9'
 var TERM = settings.term;
 var g_articleList=[];
 var mongodb = require('./models/db');
@@ -19,30 +20,30 @@ getInfomation = function(callback) {
 		
 		//并发读取各文章
 		async.parallel([	
-	
-		    // get odds
-		    function(callback) {
-		        var i;
-		        for(i in g_articleList)
-		        {
-		            //\u671f\u8d54\u7387\u5206\u6790 = "赔率分析"      
-		            var tmp = g_articleList[i].name.match(/\u80DC\u8D1F\u5F69\d+\u671f\u8d54\u7387\u5206\u6790.*/);
-		            if(Array.isArray(tmp))
-		            {
-						console.log('Get odds');
-		                //console.log(list[i].url);
-		                spider.getArticleOdds(g_articleList[i].url, TERM, function(err, oddArray) {
-		                    if(err) {
-								console.log('spider.getArticleOdds() error');
-		                    	return callback(err);
-							}
-							//console.log(oddArray);
-		                    //g_odds = oddArray;
-							callback(null, oddArray);
-		                });
-		            }
-		        }
-		    },
+			
+		    // // get odds
+		    // function(callback) {
+		    //     var i;
+		    //     for(i in g_articleList)
+		    //     {
+		    //         //\u671f\u8d54\u7387\u5206\u6790 = "赔率分析"      
+		    //         var tmp = g_articleList[i].name.match(/\u80DC\u8D1F\u5F69\d+\u671f\u8d54\u7387\u5206\u6790.*/);
+		    //         if(Array.isArray(tmp))
+		    //         {
+						// console.log('Get odds');
+		    //             //console.log(list[i].url);
+		    //             spider.getArticleOdds(g_articleList[i].url, TERM, function(err, oddArray) {
+		    //                 if(err) {
+						// 		console.log('spider.getArticleOdds() error');
+		    //                 	return callback(err);
+						// 	}
+						// 	//console.log(oddArray);
+		    //                 //g_odds = oddArray;
+						// 	callback(null, oddArray);
+		    //             });
+		    //         }
+		    //     }
+		    // },
 
 			//得到任选九场推荐
 		    function(callback) {
@@ -122,11 +123,11 @@ getInfomation = function(callback) {
 	
 			console.log("Save data");
 			for(i in array) {
-			    spider.saveObject(array[i], function(err){
+			    spider.saveObjectUniqueTermId(array[i], function(err){
 			        if(err) {
 						if(err.code != 11000)
 							return console.log(err.err);
-			        };
+			        }
 			    }); 
 			}
 		});			
@@ -134,6 +135,22 @@ getInfomation = function(callback) {
 }
 
 getInfomation();
+
+spider.getOkooo(OkoooUrl, TERM, function(err, urlArray) {
+	//console.log(urlArray);
+	for( i in urlArray ) {
+		spider.getOkOdd(urlArray[i], TERM, parseInt(i)+1, function(err, oddArray) {
+			console.log(oddArray);
+			spider.updateOdd(oddArray, function(err) {
+				if(err) {
+					console.log(err.err);
+				}
+			});
+		});	
+	}
+	
+
+});
 
 
   
